@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>SimpleMarkerSymbol with SVG Path - Simplified</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.14/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://js.arcgis.com/3.14/dojox/widget/ColorPicker/ColorPicker.css">
+    <link rel="stylesheet" href="http://js.arcgis.com/3.14/esri/css/esri.css">
+    <style>
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <script src="http://js.arcgis.com/3.14/"></script>
+    <script>
+        var map;
+        require([
+            "esri/map",
+            "esri/geometry/Point",
+            "esri/SpatialReference",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "dojo/_base/Color",
+            "esri/graphic",
+            "dojo/domReady!"
+        ], function(Map,
+                    Point,
+                    SpatialReference,
+                    SimpleMarkerSymbol,
+                    SimpleLineSymbol,
+                    SimpleFillSymbol,
+                    Color,
+                    Graphic) {
+            map = new Map("map", {
+                basemap: "osm",
+                center: [108.990166,34.252359],
+                zoom: 13
+            });
+            //监听
+            map.on("load", function() { ShowLocation(108.990166,34.252359); });
+            //添加点
+            function ShowLocation(x, y) {
+                var point = new Point(x, y, new SpatialReference({wkid:4326}));
+                var simpleMarkerSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE,15, new SimpleLineSymbol(SimpleLineSymbol.STYLE_CIRCLE, new Color([255, 0, 0]), 0), new Color([255, 0, 0]));
+                var graphic = new Graphic(point, simpleMarkerSymbol);
+                map.graphics.add(graphic);
+            };
+        });
+    </script>
+</head>
+<div id="map"></div>
+</body>
+</html>
+
+
+

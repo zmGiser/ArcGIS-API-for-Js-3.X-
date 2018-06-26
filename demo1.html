@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Well completion dates for the Hugoton Gas Field Over Time</title>
+
+    <link rel="stylesheet" href="./lib/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="./lib/esri/css/esri.css">
+    <style>
+        html, body, #mapDiv {
+            padding:0;
+            margin:0;
+            height:100%;
+        }
+
+        #mapDiv {
+            position: relative;
+        }
+
+        #bottomPanel {
+            left: 50%;
+            margin: 0 auto;
+            margin-left: -500px;
+            position: absolute;
+            bottom: 2.5em;
+        }
+
+        #timeInfo{
+            border-radius: 4px;
+            border: solid 2px #ccc;
+            background-color: #fff;
+            display: block;
+            padding: 5px;
+            position: relative;
+            text-align: center;
+            width: 1000px;
+            z-index: 99;
+        }
+
+    </style>
+
+    <script src="./lib/dojo/dojo.js"></script>
+    <script>
+        var map;
+        require([
+            "esri/map",
+            "esri/layers/layer",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "esri/TimeExtent",
+            "esri/dijit/TimeSlider",
+            "dojo/_base/array",
+            "dojo/dom",
+            "dojo/domReady!"
+        ], function(
+            Map, Layer,ArcGISDynamicMapServiceLayer,
+            TimeExtent, TimeSlider,
+            arrayUtils, dom
+        ) {
+            map = new Map("mapDiv", {
+                basemap: "osm",
+                center: [108.9,34.4],
+                zoom: 9
+            });
+            //获取时间滑块的图层的url
+            var urlArr = [
+                "http://localhost:6080/arcgis/rest/services/OneMap/DEM/MapServer",
+                "http://localhost:6080/arcgis/rest/services/OneMap/土地利用类型图/MapServer",
+                "http://localhost:6080/arcgis/rest/services/OneMap/地貌/MapServer",
+                "http://localhost:6080/arcgis/rest/services/OneMap/植被覆盖度/MapServer"
+            ];
+            var dynamicLayer = [];
+            //获取动态图层集
+            function getDynamicLayers(urlarr) {
+                urlarr.map(function (url) {
+                    dynamicLayer.push(new ArcGISDynamicMapServiceLayer(url));
+                })
+            };
+            getDynamicLayers(urlArr);
+            map.on("load", initSlider);
+
+            function initSlider() {
+                var timeSlider = new TimeSlider({
+                    style: "width: 100%;"
+                }, dom.byId("timeSliderDiv"));
+                map.setTimeSlider(timeSlider);
+
+                var timeExtent = new TimeExtent();
+                timeExtent.startTime = new Date("3/1/2018 UTC");
+                timeExtent.endTime = new Date("3/29/2018 UTC");
+                timeSlider.setThumbCount(1);
+                timeSlider.createTimeStopsByTimeInterval(timeExtent, 1,'esriTimeUnitsWeeks');
+                timeSlider.setThumbIndexes([0,1]);
+                timeSlider.setThumbMovingRate(4000);
+                timeSlider.startup();
+
+                //add labels for every other time stop
+                var labels = arrayUtils.map(timeSlider.timeStops, function(timeStop, i) {
+                        return timeStop.getUTCDate();
+                });
+                timeSlider.setLabels(labels);
+
+                //清除图层
+                function getMapLayers() {
+                    for (var j=1, jl=map.layerIds.length; j<jl; j++) {
+                            var currentLayer = map.getLayer(map.layerIds[j]);
+                            map.removeLayer(currentLayer);
+                    }
+                }
+                timeSlider.on("time-extent-change", function(evt) {
+                    if(map._layers !== null){
+                        getMapLayers();
+                    }
+                        if(evt.endTime.getUTCDate() === 8){
+                            map.addLayer(dynamicLayer[0]);
+                        }
+                        else if(evt.endTime.getUTCDate() === 15){
+                            map.addLayer(dynamicLayer[1]);
+                        }
+                        else if(evt.endTime.getUTCDate() === 22){
+                            map.addLayer(dynamicLayer[2]);
+                        }
+                        else if(evt.endTime.getUTCDate() === 29){
+                            map.addLayer(dynamicLayer[3]);
+                        }
+                    var startValString = evt.startTime.getUTCDate();
+                    var endValString = evt.endTime.getUTCDate();
+                    dom.byId("daterange").innerHTML = "<i>" + startValString + " and " + endValString  + "<\/i>";
+                });
+            }
+        });
+    </script>
+</head>
+<body class="claro">
+<div id="mapDiv">
+    <div id="bottomPanel">
+        <div id="timeInfo">
+            <div id="daterange">当前时间</div>
+            <div id="timeSliderDiv"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

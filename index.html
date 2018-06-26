@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Swipe Map</title>
+     <!--<link rel="stylesheet" href="http://js.arcgis.com/3.6/js/esri/css/esri.css">-->
+     <link rel="stylesheet" href="lib/esri/css/esri.css">
+     <link rel="stylesheet" type="text/css" href="./css/swipe.css">
+     <script src="lib/dojo/dojo.js"></script>
+      <script type="text/javascript" src='./js/swipe.js'></script>
+  </head>
+  <body>
+    <!--<header style='overflow: hidden'><h1 style='float:left'>MapSwipe</h1> <a style='float:right;cursor: pointer;' target='_blank' href='https://github.com/kunkun01/MapSwipe'><img style='width:40px;height:40px;'  src="./images/githublog.png"/></a></header>-->
+  <div id="map1">
+    <div class='mapheader'>
+    <input id='verticalswipe'   type="checkbox"/><label for='verticalswipe'>垂直分割 </label>
+    <input id='horizontalswipe' type="checkbox"/><label for='horizontalswipe'> 水平分割</label>
+    <span class='operationtip'>手动分割，选择一种方式，或者同时选中，然后在地图上移动</span>
+    </div> 
+  </div>
+  <hr>
+  <hr>
+  <div id="map2">
+    <div class='mapheader'>
+    <input id='verticalswipeanim'   type="checkbox"/><label for='verticalswipe'>垂直分割 </label>
+    <input id='horizontalswipeanim' type="checkbox"/><label for='horizontalswipe'> 水平分割</label>
+    <input type='button' id='showbt' value='隐藏'/>
+    <input type='button' id='hidebt' value='显示'/> 
+    <span class='operationtip'>自动分割，选择一种方式，或者同时选中，然后点击隐藏/显示</span>
+    </div> 
+  </div> 
+ 
+  </body>
+</html>

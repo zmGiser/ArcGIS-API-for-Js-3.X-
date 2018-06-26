@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="initial-scale= 1, maximum-scale=1,user-scalable=no">
+    <title>GSAU_Render</title>
+
+    <link rel="stylesheet" href="./lib/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="./lib/esri/css/esri.css">
+
+    <style>
+        html, body, #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+
+        #mapDiv {
+            position: relative;
+        }
+
+        #bottomPanel {
+            left: 50%;
+            margin: 0 auto;
+            margin-left: -500px;
+            position: absolute;
+            bottom: 2.5em;
+        }
+
+        #timeInfo {
+            border-radius: 4px;
+            border: solid 2px #ccc;
+            background-color: #fff;
+            display: block;
+            padding: 5px;
+            position: relative;
+            text-align: center;
+            width: 1000px;
+            z-index: 99;
+        }
+        #author{
+            border: solid 2px #99c4cc;
+            z-index: 99;
+            color: orange;
+            text-align: center;
+            position: absolute;
+            left: 40%;
+            top: 10px;
+            background: #d5e2df;
+            font-size: 18px;
+        }
+    </style>
+
+    <script src="./lib/dojo/dojo.js"></script>
+    <script>
+        var map;
+        require([
+            "esri/map",
+            "esri/layers/FeatureLayer",
+            "esri/TimeExtent",
+            "esri/layers/TimeInfo",
+            "esri/renderers/ClassBreaksRenderer",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/renderers/TimeClassBreaksAger",
+            "esri/renderers/TemporalRenderer",
+            "esri/dijit/editing/TemplatePicker",
+            "esri/dijit/TimeSlider",
+            "esri/Color",
+            "esri/layers/LabelClass",
+            "esri/symbols/TextSymbol",
+            "dojo/_base/array",
+            "dojo/dom",
+            "dojo/domReady!"
+        ], function (Map, FeatureLayer, TimeExtent, TimeInfo,
+                     ClassBreaksRenderer,
+                     SimpleMarkerSymbol, SimpleLineSymbol,
+                     TimeClassBreaksAger,TemporalRenderer,
+                     TemplatePicker, TimeSlider,
+                     Color,LabelClass,TextSymbol,arrayUtils,dom)
+        {
+            map = new Map("mapDiv", {
+                basemap: "osm",
+                center: [103.7011311,36.08666232],
+                zoom: 15,
+                showLabels : true
+            });
+            map.on("load", mapLoaded);
+
+            function mapLoaded() {
+                var featureLayer = new FeatureLayer("http://localhost:6080/arcgis/rest/services/feature/test/MapServer/0", {
+                    mode: FeatureLayer.MODE_SNAPSHOT,
+                    outFields: ["*"]
+                });
+                // debugger;
+                // console.log(featureLayer);
+                featureLayer.setDefinitionExpression("次数 > 0");
+                featureLayer.on("load", featureLayerLoaded);
+                // featureLayerLoaded();
+                var observationRenderer = new ClassBreaksRenderer(new SimpleMarkerSymbol(), "次数");
+                observationRenderer.addBreak(7, 12, new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 14, new SimpleLineSymbol().setStyle(SimpleLineSymbol.STYLE_SOLID).setColor(new Color([0,100,0])), new Color([255,182,193, 100])));
+                observationRenderer.addBreak(6, 7, new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 12, new SimpleLineSymbol().setStyle(SimpleLineSymbol.STYLE_SOLID).setColor(new Color([0,100,0])), new Color([175,238,238, 100])));
+                observationRenderer.addBreak(5, 6, new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 10, new SimpleLineSymbol().setStyle(SimpleLineSymbol.STYLE_SOLID).setColor(new Color([0,100,0])), new Color([50,205,50, 100])));
+                observationRenderer.addBreak(4, 5, new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 8, new SimpleLineSymbol().setStyle(SimpleLineSymbol.STYLE_SOLID).setColor(new Color([0,100,0])), new Color([255,255,0, 100])));
+                observationRenderer.addBreak(3, 4, new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 6, new SimpleLineSymbol().setStyle(SimpleLineSymbol.STYLE_SOLID).setColor(new Color([0,100,0])), new Color([244,164,96, 100])));
+                observationRenderer.addBreak(2, 3, new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 4, new SimpleLineSymbol().setStyle(SimpleLineSymbol.STYLE_SOLID).setColor(new Color([0,100,0])), new Color([240,128,128, 100])));
+                observationRenderer.addBreak(0, 2, new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 2, new SimpleLineSymbol().setStyle(SimpleLineSymbol.STYLE_SOLID).setColor(new Color([0,100,0])), new Color([178,34,34, 100])));
+
+                //名称标注
+                var labelSymbol = new TextSymbol().setColor(new Color("#000000"));
+                labelSymbol.font.setSize("9pt");
+                labelSymbol.font.setFamily("微软雅黑");
+                var json = {
+                    "labelExpressionInfo": {"value": "{名称}"},
+                    "useCodedValues": false,
+                    "labelPlacement": "center-right"
+                };
+                var labelClass = new LabelClass(json);
+                labelClass.symbol = labelSymbol;
+                featureLayer.setLabelingInfo([labelClass]);
+                var renderer = new TemporalRenderer(observationRenderer, null, null, null);
+                featureLayer.setRenderer(renderer);
+
+                map.addLayer(featureLayer);
+            }
+
+            function featureLayerLoaded(evt) {
+                console.log(122);
+                var timeSlider = new TimeSlider({
+                    style: "width: 100%;"
+                }, dom.byId("timeSliderDiv"));
+                map.setTimeSlider(timeSlider);
+                timeSlider.setThumbCount(1);
+                var timeExtent = new TimeExtent();
+                timeExtent.startTime = new Date("2017/2/28 UTC");
+                timeExtent.endTime = new Date("2017/3/31 UTC");
+                timeSlider.createTimeStopsByTimeInterval(timeExtent, 1, "esriTimeUnitsDays");
+                timeSlider.setThumbIndexes([0]);
+                timeSlider.startup();
+                var labels = arrayUtils.map(timeSlider
+                    .timeStops, function(timeStop) {
+                    return timeStop.getUTCDate();
+                });
+                timeSlider.setLabels(labels);
+                timeSlider.on("time-extent-change", displayTimeInfo);
+
+            }
+
+            function displayTimeInfo(timeExtent) {
+                var info = "当前时间：2017/3/"+timeExtent.endTime.getDate();
+                var date="2017/3/"+timeExtent.endTime.getDate();
+                dom.byId("daterange").innerHTML = info;
+            }
+        });
+    </script>
+</head>
+
+<body class="claro">
+<div id="mapDiv">
+    <div id="author">
+        基于GPS的甘肃农业大学校园测点Demo
+        </br> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;developed by --张明
+    </div>
+    <div id="bottomPanel">
+        <div id="timeInfo">
+            <div id="daterange">当前时间</div>
+            <div id="timeSliderDiv"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

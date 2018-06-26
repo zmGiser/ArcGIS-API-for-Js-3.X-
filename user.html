@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World</title>
+    <style>
+        html,body,#mapDiv
+        {
+            height:100%;
+            width:100%;
+            padding:0;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="./lib/dijit/themes/tundra/tundra.css"/>
+    <link rel="stylesheet" type="text/css" href="./lib/esri/css/esri.css" />
+    <script type="text/javascript" src="./lib/init.js"></script>
+    <script>
+        require(["esri/map","esri/layers/ArcGISDynamicMapServiceLayer",
+                "dojo/domReady!"],
+            function(Map,ArcGISDynamicMapServiceLayer){
+                var map = new Map("mapDiv", {
+                    center: [109, 34.5],
+                    zoom: 11,
+                    basemap: "osm"
+                });
+                //利用url创建一个动态地图服务对象
+                //var layer=new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/OneMap/主城区道路/MapServer");
+                //var layer1=new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/OneMap/行政区划/MapServer");
+                var layer=new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/feature/f2018_03/MapServer");
+                //将地图服务对象添加到地图容器中
+                //map.addLayer(layer1);
+                map.addLayer(layer);
+
+            })
+    </script>
+</head>
+<body>
+<div id="mapDiv"></div>
+</body>
+</html>

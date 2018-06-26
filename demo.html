@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Layer Swipe</title>
+    <link rel="stylesheet" href="./lib/esri/themes/calcite/dijit/calcite.css">
+    <link rel="stylesheet" href="./lib/esri/themes/calcite/esri/esri.css">
+    <style>
+        html, body, #map,#container {
+            padding:0;
+            margin:0;
+            height:100%;
+            position:relative;
+        }
+    </style>
+    <script src="./lib/dojo/dojo.js"></script>
+    <script>
+        require([
+            "esri/map",
+            "esri/dijit/LayerSwipe",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/_base/array",
+            "dojo/domReady!"
+        ],function (Map,LayerSwipe,ArcGISDynamicMapServiceLayer,array) {
+            var map = new Map("map",{
+                basemap:"osm",
+                zoom:10,
+                center:[108.9,34.4]
+            });
+            var dynamicLayer = new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/OneMap/植被覆盖度/MapServer");
+            var swipeLayer = new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/OneMap/土地利用类型图/MapServer");
+            map.addLayer(dynamicLayer);
+            map.addLayer(swipeLayer);
+            var swipeWidget = new LayerSwipe({
+                type:"vertical",
+                map:map,
+                layers:[swipeLayer]
+            },"swipeDiv");
+            swipeWidget.startup();
+        })
+    </script>
+</head>
+<body>
+<div class="calcite" id="container">
+<div id="map">
+    <div id="swipeDiv"></div>
+</div>
+</div>
+</body>
+</html>6

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!--suppress ALL -->
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Test Map</title>
+    <link rel="stylesheet" href="lib/esri/css/esri.css"/>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #sliderDiv{
+            width: 2px;
+            height: 100%;
+            border: #323232 2px solid;
+            background: #323232;
+            position: absolute;
+            left: 80px;
+            z-index: 999;
+            /*display: none;*/
+        }
+        #sliderDiv img{
+            top: 50%;
+            position: relative;
+        }
+    </style>
+    <script src="lib/dojo/dojo.js"></script>
+    <script>
+        require(["esri/map",
+            "esri/layers/ArcGISTiledMapServiceLayer",
+            "dojo/dom",
+            "dojo/on",
+            "dojo/dom-class",
+            "dojo/domReady!"
+        ], function(Map, ArcGISTiledMapServiceLayer, dom, on, domClass) {
+            map1 = new Map("viewDiv", {
+                basemap: "topo",
+                center: [100.69828872684525,33.24237112174851], // long, lat
+                zoom: 4,
+                sliderStyle: "small"
+            });
+            var map1toplayer=new ArcGISTiledMapServiceLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',{id:'toplayer'});//渲染之后的div的 id为 map_toplayer 即是 map div的 id+加下划线+图层layer
+            var  map1toplayerid=map1.id+'_toplayer';
+            var map1toplayerdiv=null;
+            map1.addLayer(map1toplayer);
+            var isverticalswipe=false;
+            var ishorizontalswipe=false;
+            // on(dom.byId('moveImg'),"mouse-down",function(){
+            on(dom.byId('moveImg'),"click",function(){
+                isverticalswipe=!isverticalswipe;
+            });
+            var sliderPosition = document.getElementById("sliderDiv");
+            //因为地图在缩放或者平移过程中，承载layer的 div会发生水平或者垂直方向的transform。所以计算出来
+            on( map1toplayer,'load',function(){
+                on(map1,'mouse-move',function(e){
+                    map1toplayerdiv=map1toplayerdiv?map1toplayerdiv:document.getElementById(map1.id+'_toplayer');
+                    var  offsetX=e.screenPoint.x;
+                    var  offsetY=e.screenPoint.y;
+                    var  mapheightpx=map1toplayerdiv.style.height;
+                    var  mapwidthpx=map1toplayerdiv.style.width;
+                    //去掉单位px 取出数值
+                    var  mapheight=parseInt(mapheightpx.substring(0,mapheightpx.lastIndexOf('px')));
+                    var  mapwidth=parseInt(mapwidthpx.substring(0,mapwidthpx.lastIndexOf('px')));
+                    var  origin=getLayerTransform(map1toplayerdiv);
+                    console.log(origin);
+                    var  cliptop=-origin.y+"px";
+                    var  clipleft=-origin.x+"px";//clip的左上起点
+                    var clipbottom,cliplright;
+                    clipbottom=ishorizontalswipe?(offsetY-origin.y)+'px':(mapheight-origin.y)+'px';
+                    clipright=isverticalswipe?(offsetX-origin.x)+"px":(mapwidth-origin.x)+"px";
+                    console.log('rect('+cliptop+','+clipright+','+clipbottom+','+clipleft+')');
+                    sliderPosition.style.left = -clipright;
+                    map1toplayerdiv.style.clip='rect('+cliptop+','+clipright+','+clipbottom+','+clipleft+')';
+                });
+            })
+
+            //获取图层右上角的坐标
+            function getLayerTransform(layer) {
+                // var layer = document.getElementById(layerid);
+
+                var xorigin, yorigin, layerstyle = layer.style;
+                //chrome
+                if (layerstyle['-webkit-transform']) {
+                    var s = layerstyle['-webkit-transform'];//格式为"translate(0px, 0px)"
+                    var xyarray = s.replace(/translate\(|px|\s|\)/, '').split(',');
+                    xorigin = parseInt(xyarray[0]);
+                    yorigin = parseInt(xyarray[1]);
+                }
+                //firefox
+                else if (layerstyle['transform']) {
+                    //layer.style['transform'] 格式为"translate3d(xpx,ypx,zpx)" 这样的字符串，现在通过匹配转为[z,y,z]的数组,分别将 px,translate3d,空格
+                    // var xyzarray=layerstyle.replace(/px/g,'').replace(/ /g,'').replace('translate3d(','').replace(')','').split(',')
+                    var layertransforstring=layerstyle['transform'];
+                    var xyz = layertransforstring.replace(/px|\s|translate3d\(|px|\)/g, '').split(',');
+                    xorigin = parseInt(xyz[0]);
+                    yorigin = parseInt(xyz[1]);
+                }
+                //ie 8+
+                else {
+                    xorigin = parseInt(layer.style.left.replace('px', ''));
+                    yorigin = parseInt(layer.style.top.replace('px', ''));
+                }
+                return {
+                    x: xorigin,
+                    y: yorigin
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+<div id="viewDiv">
+    <div id="sliderDiv">
+        <img id="moveImg" src="img/move.png">
+    </div>
+</div>
+</body>
+</html>
